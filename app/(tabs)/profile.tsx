@@ -212,8 +212,12 @@ export default function Profile() {
       {/* Profil zurücksetzen */}
       <Pressable
         onPress={() => {
-          if (confirmReset) signOut();
-          else setConfirmReset(true);
+          if (confirmReset) {
+            signOut();
+            router.replace('/(auth)/welcome');
+          } else {
+            setConfirmReset(true);
+          }
         }}
         style={{
           flexDirection: 'row',
