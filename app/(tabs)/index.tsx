@@ -1,4 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { useMemo } from 'react';
+import { FlatList, Pressable, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,14 +14,24 @@ import {
 } from 'lucide-react-native';
 import { Card, Screen, Skeleton, Text } from '@/components/ui';
 import { DogAvatar } from '@/components/dog/DogAvatar';
-import { DemoNotice } from '@/components/common/DemoNotice';
+import { BreedImage } from '@/components/breed/BreedImage';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useDogs } from '@/features/dogs/api';
-import { breedCount, getBreed } from '@/data/breeds';
-import { isDemoMode } from '@/lib/env';
+import { breedCount, breeds, getBreed } from '@/data/breeds';
+import breedImages from '@/data/breedImages.json';
+import type { Breed } from '@/types';
 import { dogAge } from '@/utils/format';
 import { dailyTip } from '@/utils/dailyTip';
 import { elevation, radius, spacing, useTheme } from '@/theme';
+
+const images = breedImages as Record<string, string>;
+
+/** Tag im Jahr — für täglich wechselnde Inhalte. */
+function dayOfYear(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now.getTime() - start.getTime()) / 86_400_000);
+}
 
 export default function Home() {
   const router = useRouter();
@@ -31,23 +43,53 @@ export default function Home() {
   const greetingName = user?.email?.split('@')[0] ?? '';
   const tip = dailyTip(i18n.language);
 
+  // Täglich wechselnde Auswahl von 12 Rassen, gleichmäßig über den Katalog verteilt.
+  const featured = useMemo<Breed[]>(() => {
+    const day = dayOfYear();
+    return Array.from({ length: 12 }, (_, i) => breeds[(day + i * 29) % breeds.length]);
+  }, []);
+  const heroUri = images[featured[0]?.id];
+
   return (
     <Screen scroll>
-      {/* Begrüßung */}
-      <View style={{ marginBottom: spacing.xl }}>
-        <Text variant="caption" tone="muted">{t('home.greeting')}</Text>
-        <Text variant="title">{greetingName} 👋</Text>
-        <Text variant="body" tone="muted">{t('home.subtitle')}</Text>
+      {/* Hero mit Hundefoto */}
+      <View
+        style={{
+          height: 168,
+          borderRadius: radius.xl,
+          overflow: 'hidden',
+          marginBottom: spacing.xl,
+          backgroundColor: colors.accent,
+          justifyContent: 'flex-end',
+        }}
+      >
+        {heroUri ? (
+          <Image
+            source={{ uri: heroUri }}
+            style={{ position: 'absolute', width: '100%', height: '100%' }}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="disk"
+          />
+        ) : null}
+        <View
+          style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: colors.overlay }}
+        />
+        <View style={{ padding: spacing.xl }}>
+          <Text variant="caption" style={{ color: '#FFFFFF', opacity: 0.85 }}>
+            {t('home.greeting')}
+          </Text>
+          <Text variant="title" style={{ color: '#FFFFFF' }}>
+            {greetingName} 👋
+          </Text>
+          <Text variant="body" style={{ color: '#FFFFFF', opacity: 0.9 }}>
+            {t('home.subtitle')}
+          </Text>
+        </View>
       </View>
 
-      {isDemoMode ? (
-        <View style={{ marginBottom: spacing.xl }}>
-          <DemoNotice feature="KI-Chat & Bilderkennung" />
-        </View>
-      ) : null}
-
       {/* Meine Hunde */}
-      <SectionTitle text={t('home.myDogs')} />
+      <SectionHeader title={t('home.myDogs')} />
       {isLoading ? (
         <Skeleton height={84} radius={radius.lg} />
       ) : !dogs?.length ? (
@@ -91,6 +133,47 @@ export default function Home() {
         </View>
       )}
 
+      {/* Rassen entdecken — Foto-Karussell */}
+      <View style={{ marginTop: spacing.xl }}>
+        <SectionHeader
+          title={t('home.discoverBreeds')}
+          actionLabel={t('home.seeAll')}
+          onAction={() => router.push('/(tabs)/breeds')}
+        />
+        <FlatList
+          horizontal
+          data={featured}
+          keyExtractor={(b) => b.id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: spacing.md }}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => router.push(`/breed/${item.id}`)}
+              style={({ pressed }) => ({
+                width: 152,
+                borderRadius: radius.lg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                overflow: 'hidden',
+                opacity: pressed ? 0.85 : 1,
+                ...(elevation.low as object),
+              })}
+            >
+              <BreedImage breedId={item.id} height={104} rounded={0} />
+              <View style={{ padding: spacing.md, gap: 2 }}>
+                <Text variant="bodyStrong" numberOfLines={1}>
+                  {i18n.language === 'en' ? item.nameEn : item.nameDe}
+                </Text>
+                <Text variant="caption" tone="muted" numberOfLines={1}>
+                  {item.origin}
+                </Text>
+              </View>
+            </Pressable>
+          )}
+        />
+      </View>
+
       {/* Tipp des Tages */}
       <View
         style={{
@@ -113,7 +196,7 @@ export default function Home() {
 
       {/* Entdecken */}
       <View style={{ marginTop: spacing.xl }}>
-        <SectionTitle text={t('home.explore')} />
+        <SectionHeader title={t('home.explore')} />
         <View style={{ gap: spacing.md }}>
           <View style={{ flexDirection: 'row', gap: spacing.md }}>
             <FeatureTile
@@ -149,11 +232,31 @@ export default function Home() {
   );
 }
 
-function SectionTitle({ text }: { text: string }) {
+function SectionHeader({
+  title,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
-    <Text variant="heading" style={{ marginBottom: spacing.md }}>
-      {text}
-    </Text>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing.md,
+      }}
+    >
+      <Text variant="heading">{title}</Text>
+      {actionLabel ? (
+        <Pressable onPress={onAction} hitSlop={8} accessibilityRole="button">
+          <Text variant="caption" tone="accent">{actionLabel}</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
