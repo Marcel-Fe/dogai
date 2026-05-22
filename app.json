@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "DogAI",
+    "slug": "dogai",
+    "scheme": "dogai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF8F4"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dogai.app"
+    },
+    "android": {
+      "package": "com.dogai.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF8F4"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "DogAI nutzt die Kamera, um Fotos deines Hundes für den KI-Scan aufzunehmen."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "DogAI greift auf deine Fotos zu, um Bilder deines Hundes hochzuladen."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "baseUrl": "/dogai"
+    }
+  }
+}
