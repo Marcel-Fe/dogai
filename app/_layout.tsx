@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import { SplashScreen, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -21,10 +21,12 @@ function AuthGate() {
   const name = useProfile((s) => s.name);
   const segments = useSegments();
   const router = useRouter();
+  const navState = useRootNavigationState();
   const { colors } = useTheme();
 
   useEffect(() => {
-    if (!hydrated) return;
+    // Erst umleiten, wenn der Root-Navigator gemountet ist (navState.key).
+    if (!navState?.key || !hydrated) return;
     SplashScreen.hideAsync().catch(() => {});
     const inAuthGroup = segments[0] === '(auth)';
     if (!name && !inAuthGroup) {
@@ -32,7 +34,7 @@ function AuthGate() {
     } else if (name && inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [hydrated, name, segments, router]);
+  }, [navState?.key, hydrated, name, segments, router]);
 
   // Der Stack wird IMMER gerendert, damit der Navigator gemountet ist,
   // bevor umgeleitet wird. Vor der Hydration deckt ein Overlay den Wechsel ab.
