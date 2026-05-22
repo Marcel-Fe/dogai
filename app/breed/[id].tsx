@@ -10,7 +10,8 @@ import { useBreedDetail } from '@/features/breeds/api';
 import { isDemoMode } from '@/lib/env';
 import { formatRange } from '@/utils/format';
 import { breedTips } from '@/utils/breedTips';
-import { spacing, useTheme } from '@/theme';
+import { breedRatings } from '@/utils/breedProfile';
+import { radius, spacing, useTheme } from '@/theme';
 
 export default function BreedDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,7 +35,7 @@ export default function BreedDetail() {
     <Screen scroll padded={false}>
       <Header title={name} />
       <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg }}>
-        <BreedImage breedId={breed.id} height={210} />
+        <BreedImage breedId={breed.id} height={240} />
 
         <View style={{ gap: spacing.sm }}>
           <Badge label={`FCI ${breed.fciGroup}`} tone="accent" />
@@ -42,19 +43,36 @@ export default function BreedDetail() {
           <Text variant="body" tone="muted">{short}</Text>
         </View>
 
+        {/* Steckbrief — berechnete Bewertungen */}
+        <View style={{ gap: spacing.sm }}>
+          <Text variant="heading">{t('breeds.atAGlance')}</Text>
+          <Card>
+            {breedRatings(breed, i18n.language).map((r, i, arr) => (
+              <RatingRow
+                key={r.key}
+                label={r.label}
+                value={r.value}
+                last={i === arr.length - 1}
+              />
+            ))}
+          </Card>
+        </View>
+
         {/* Kernfakten */}
-        <Card>
-          <FactRow label={t('breeds.origin')} value={breed.origin} />
-          <FactRow label={t('breeds.size')} value={t(`breeds.size_${breed.sizeClass}`)} />
-          <FactRow label={t('breeds.weight')} value={formatRange(breed.weightKg, 'kg')} />
-          <FactRow label={t('breeds.height')} value={formatRange(breed.heightCm, 'cm')} />
-          <FactRow
-            label={t('breeds.lifespan')}
-            value={formatRange(breed.lifespanYears, t('breeds.years'))}
-          />
-          <FactRow label={t('breeds.activity')} value={'●'.repeat(breed.activity) + '○'.repeat(5 - breed.activity)} />
-          <FactRow label="Fell / Coat" value={breed.coat} last />
-        </Card>
+        <View style={{ gap: spacing.sm }}>
+          <Text variant="heading">{t('breeds.size')} & {t('breeds.origin')}</Text>
+          <Card>
+            <FactRow label={t('breeds.origin')} value={breed.origin} />
+            <FactRow label={t('breeds.size')} value={t(`breeds.size_${breed.sizeClass}`)} />
+            <FactRow label={t('breeds.weight')} value={formatRange(breed.weightKg, 'kg')} />
+            <FactRow label={t('breeds.height')} value={formatRange(breed.heightCm, 'cm')} />
+            <FactRow
+              label={t('breeds.lifespan')}
+              value={formatRange(breed.lifespanYears, t('breeds.years'))}
+            />
+            <FactRow label="Fell / Coat" value={breed.coat} last />
+          </Card>
+        </View>
 
         {/* Wesen */}
         <View style={{ gap: spacing.sm }}>
@@ -105,6 +123,45 @@ export default function BreedDetail() {
         </View>
       </View>
     </Screen>
+  );
+}
+
+function RatingRow({
+  label,
+  value,
+  last,
+}: {
+  label: string;
+  value: number;
+  last?: boolean;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.sm,
+        borderBottomWidth: last ? 0 : 1,
+        borderBottomColor: colors.border,
+      }}
+    >
+      <Text variant="caption" tone="muted">{label}</Text>
+      <View style={{ flexDirection: 'row', gap: 5 }}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <View
+            key={n}
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: radius.pill,
+              backgroundColor: n <= value ? colors.accent : colors.surfaceAlt,
+            }}
+          />
+        ))}
+      </View>
+    </View>
   );
 }
 

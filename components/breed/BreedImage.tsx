@@ -1,8 +1,10 @@
 import { View, type DimensionValue } from 'react-native';
 import { Image } from 'expo-image';
 import { PawPrint } from 'lucide-react-native';
-import { publicUrl } from '@/lib/supabase';
+import breedImages from '@/data/breedImages.json';
 import { radius, useTheme } from '@/theme';
+
+const images = breedImages as Record<string, string>;
 
 type Props = {
   breedId: string;
@@ -12,12 +14,12 @@ type Props = {
 };
 
 /**
- * Rassenbild aus dem Storage-Bucket (remote, mit Geräte-Cache).
- * Fehlt das Bild, bleibt der Platzhalter sichtbar — die App funktioniert offline.
+ * Rassenbild aus der gebündelten Bildliste (Wikimedia, frei lizenziert).
+ * Fehlt ein Bild, bleibt der Platzhalter sichtbar — die App funktioniert offline.
  */
 export function BreedImage({ breedId, height = 160, width = '100%', rounded }: Props) {
   const { colors } = useTheme();
-  const uri = publicUrl('breed-images', `${breedId}.jpg`);
+  const uri = images[breedId];
 
   return (
     <View
@@ -32,13 +34,15 @@ export function BreedImage({ breedId, height = 160, width = '100%', rounded }: P
       }}
     >
       <PawPrint size={height * 0.28} color={colors.accent} />
-      <Image
-        source={{ uri }}
-        style={{ position: 'absolute', width: '100%', height: '100%' }}
-        contentFit="cover"
-        transition={200}
-        cachePolicy="disk"
-      />
+      {uri ? (
+        <Image
+          source={{ uri }}
+          style={{ position: 'absolute', width: '100%', height: '100%' }}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="disk"
+        />
+      ) : null}
     </View>
   );
 }
