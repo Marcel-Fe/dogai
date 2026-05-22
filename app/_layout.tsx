@@ -34,22 +34,35 @@ function AuthGate() {
     }
   }, [hydrated, name, segments, router]);
 
-  if (!hydrated) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.accent} />
-      </View>
-    );
-  }
+  // Der Stack wird IMMER gerendert, damit der Navigator gemountet ist,
+  // bevor umgeleitet wird. Vor der Hydration deckt ein Overlay den Wechsel ab.
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="dog/[id]" />
-      <Stack.Screen name="dog/form" />
-      <Stack.Screen name="breed/[id]" />
-      <Stack.Screen name="scan/[id]" />
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="dog/[id]" />
+        <Stack.Screen name="dog/form" />
+        <Stack.Screen name="breed/[id]" />
+        <Stack.Screen name="scan/[id]" />
+      </Stack>
+      {!hydrated ? (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.bg,
+          }}
+        >
+          <ActivityIndicator color={colors.accent} />
+        </View>
+      ) : null}
+    </View>
   );
 }
 
