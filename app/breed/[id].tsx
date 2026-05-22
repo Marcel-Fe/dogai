@@ -1,13 +1,10 @@
 import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Badge, Card, Header, Screen, Skeleton, Text } from '@/components/ui';
+import { Badge, Card, Header, Screen, Text } from '@/components/ui';
 import { BreedImage } from '@/components/breed/BreedImage';
 import { VetWarning } from '@/components/common/VetWarning';
-import { DemoNotice } from '@/components/common/DemoNotice';
 import { getBreed } from '@/data/breeds';
-import { useBreedDetail } from '@/features/breeds/api';
-import { isDemoMode } from '@/lib/env';
 import { formatRange } from '@/utils/format';
 import { breedTips } from '@/utils/breedTips';
 import { breedRatings } from '@/utils/breedProfile';
@@ -116,11 +113,6 @@ export default function BreedDetail() {
           </Card>
         </View>
 
-        {/* KI-Detailtexte */}
-        <View style={{ gap: spacing.sm }}>
-          <Text variant="heading">{t('breeds.aiDetails')}</Text>
-          <BreedDeepContent breedId={breed.id} />
-        </View>
       </View>
     </Screen>
   );
@@ -187,53 +179,6 @@ function FactRow({
     >
       <Text variant="caption" tone="muted">{label}</Text>
       <Text variant="caption" style={{ flex: 1, textAlign: 'right' }}>{value}</Text>
-    </View>
-  );
-}
-
-function BreedDeepContent({ breedId }: { breedId: string }) {
-  // Im Demo-Modus kein KI-Aufruf — Hinweis statt Detailtexten.
-  if (isDemoMode) {
-    return <DemoNotice feature="Ausführliche KI-Rasseninfos" />;
-  }
-  return <BreedDeepContentLive breedId={breedId} />;
-}
-
-function BreedDeepContentLive({ breedId }: { breedId: string }) {
-  const { t, i18n } = useTranslation();
-  const { data, isLoading, isError } = useBreedDetail(breedId, i18n.language);
-
-  if (isLoading) {
-    return (
-      <View style={{ gap: spacing.sm }}>
-        <Text variant="caption" tone="muted">{t('breeds.generating')}</Text>
-        <Skeleton height={80} radius={12} />
-        <Skeleton height={80} radius={12} />
-      </View>
-    );
-  }
-  if (isError || !data) {
-    return (
-      <Text variant="caption" tone="muted">{t('common.error')}</Text>
-    );
-  }
-
-  const sections: { key: string; label: string }[] = [
-    { key: 'care', label: t('breeds.care') },
-    { key: 'training', label: t('breeds.training') },
-    { key: 'nutrition', label: t('breeds.nutrition') },
-    { key: 'health', label: t('breeds.health') },
-    { key: 'behavior', label: t('breeds.behavior') },
-  ];
-
-  return (
-    <View style={{ gap: spacing.lg }}>
-      {sections.map((s) => (
-        <View key={s.key} style={{ gap: spacing.xs }}>
-          <Text variant="heading">{s.label}</Text>
-          <Text variant="body" tone="muted">{(data as Record<string, string>)[s.key]}</Text>
-        </View>
-      ))}
     </View>
   );
 }

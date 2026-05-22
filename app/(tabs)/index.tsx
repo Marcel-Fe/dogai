@@ -3,15 +3,7 @@ import { FlatList, Pressable, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import {
-  ChevronRight,
-  Dog as DogIcon,
-  Lightbulb,
-  Plus,
-  ScanLine,
-  Sparkles,
-  User,
-} from 'lucide-react-native';
+import { ChevronRight, Dog as DogIcon, Lightbulb, Plus, User } from 'lucide-react-native';
 import { Card, Screen, Skeleton, Text } from '@/components/ui';
 import { DogAvatar } from '@/components/dog/DogAvatar';
 import { BreedImage } from '@/components/breed/BreedImage';
@@ -197,35 +189,19 @@ export default function Home() {
       {/* Entdecken */}
       <View style={{ marginTop: spacing.xl }}>
         <SectionHeader title={t('home.explore')} />
-        <View style={{ gap: spacing.md }}>
-          <View style={{ flexDirection: 'row', gap: spacing.md }}>
-            <FeatureTile
-              icon={<ScanLine size={24} color={colors.accent} />}
-              title={t('home.quickScan')}
-              subtitle={t('home.quickScanSub')}
-              onPress={() => router.push('/(tabs)/scan')}
-            />
-            <FeatureTile
-              icon={<Sparkles size={24} color={colors.accent} />}
-              title={t('home.askAi')}
-              subtitle={t('home.askAiSub')}
-              onPress={() => router.push('/(tabs)/assistant')}
-            />
-          </View>
-          <View style={{ flexDirection: 'row', gap: spacing.md }}>
-            <FeatureTile
-              icon={<DogIcon size={24} color={colors.accent} />}
-              title={t('home.breedsTile')}
-              subtitle={t('home.breedsTileSub', { count: breedCount })}
-              onPress={() => router.push('/(tabs)/breeds')}
-            />
-            <FeatureTile
-              icon={<User size={24} color={colors.accent} />}
-              title={t('home.profileTile')}
-              subtitle={t('home.profileTileSub')}
-              onPress={() => router.push('/(tabs)/profile')}
-            />
-          </View>
+        <View style={{ flexDirection: 'row', gap: spacing.md }}>
+          <FeatureTile
+            icon={<DogIcon size={24} color={colors.accent} />}
+            title={t('home.breedsTile')}
+            subtitle={t('home.breedsTileSub', { count: breedCount })}
+            onPress={() => router.push('/(tabs)/breeds')}
+          />
+          <FeatureTile
+            icon={<User size={24} color={colors.accent} />}
+            title={t('home.profileTile')}
+            subtitle={t('home.profileTileSub')}
+            onPress={() => router.push('/(tabs)/profile')}
+          />
         </View>
       </View>
     </Screen>
