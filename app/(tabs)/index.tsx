@@ -7,7 +7,7 @@ import { ChevronRight, Dog as DogIcon, Lightbulb, Plus, User } from 'lucide-reac
 import { Card, Screen, Skeleton, Text } from '@/components/ui';
 import { DogAvatar } from '@/components/dog/DogAvatar';
 import { BreedImage } from '@/components/breed/BreedImage';
-import { useAuth } from '@/features/auth/AuthContext';
+import { useProfile } from '@/features/profile/store';
 import { useDogs } from '@/features/dogs/api';
 import { breedCount, breeds, getBreed } from '@/data/breeds';
 import breedImages from '@/data/breedImages.json';
@@ -29,10 +29,10 @@ export default function Home() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
-  const { user } = useAuth();
+  const profileName = useProfile((s) => s.name);
   const { data: dogs, isLoading } = useDogs();
 
-  const greetingName = user?.email?.split('@')[0] ?? '';
+  const greetingName = profileName ?? '';
   const tip = dailyTip(i18n.language);
 
   // Täglich wechselnde Auswahl von 12 Rassen, gleichmäßig über den Katalog verteilt.

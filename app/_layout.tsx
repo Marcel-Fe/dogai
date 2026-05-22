@@ -8,31 +8,33 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ActivityIndicator } from 'react-native';
 import '@/lib/i18n';
 import { queryClient } from '@/lib/queryClient';
-import { AuthProvider, useAuth } from '@/features/auth/AuthContext';
+import { AuthProvider } from '@/features/auth/AuthContext';
+import { useProfile } from '@/features/profile/store';
 import { ToastProvider } from '@/components/ui';
 import { useTheme } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-/** Leitet je nach Auth-Status in den (auth)- oder (tabs)-Bereich. */
+/** Leitet je nach lokalem Profil in den Onboarding- oder (tabs)-Bereich. */
 function AuthGate() {
-  const { session, initializing } = useAuth();
+  const hydrated = useProfile((s) => s.hydrated);
+  const name = useProfile((s) => s.name);
   const segments = useSegments();
   const router = useRouter();
   const { colors } = useTheme();
 
   useEffect(() => {
-    if (initializing) return;
+    if (!hydrated) return;
     SplashScreen.hideAsync().catch(() => {});
     const inAuthGroup = segments[0] === '(auth)';
-    if (!session && !inAuthGroup) {
+    if (!name && !inAuthGroup) {
       router.replace('/(auth)/welcome');
-    } else if (session && inAuthGroup) {
+    } else if (name && inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [session, initializing, segments, router]);
+  }, [hydrated, name, segments, router]);
 
-  if (initializing) {
+  if (!hydrated) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
         <ActivityIndicator color={colors.accent} />

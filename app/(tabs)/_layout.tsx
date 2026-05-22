@@ -8,10 +8,10 @@ export default function TabsLayout() {
     <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
       <Tabs.Screen name="index" options={{ tabBarLabel: t('tabs.home') }} />
       <Tabs.Screen name="breeds" options={{ tabBarLabel: t('tabs.breeds') }} />
+      <Tabs.Screen name="assistant" options={{ tabBarLabel: t('tabs.assistant') }} />
       <Tabs.Screen name="profile" options={{ tabBarLabel: t('tabs.profile') }} />
-      {/* KI-Chat & Foto-Scan ausgeblendet: aus der Tab-Leiste entfernt (href: null). */}
+      {/* Foto-Scan ausgeblendet: aus der Tab-Leiste entfernt (href: null). */}
       <Tabs.Screen name="scan" options={{ href: null }} />
-      <Tabs.Screen name="assistant" options={{ href: null }} />
     </Tabs>
   );
 }

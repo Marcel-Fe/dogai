@@ -1,9 +1,11 @@
-import { View } from 'react-native';
+import { Linking, Pressable, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { ExternalLink, Heart } from 'lucide-react-native';
 import { Badge, Card, Header, Screen, Text } from '@/components/ui';
 import { BreedImage } from '@/components/breed/BreedImage';
 import { VetWarning } from '@/components/common/VetWarning';
+import { useProfile } from '@/features/profile/store';
 import { getBreed } from '@/data/breeds';
 import { formatRange } from '@/utils/format';
 import { breedTips } from '@/utils/breedTips';
@@ -14,6 +16,8 @@ export default function BreedDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
+  const favorites = useProfile((s) => s.favorites);
+  const toggleFavorite = useProfile((s) => s.toggleFavorite);
   const breed = getBreed(id);
 
   if (!breed) {
@@ -27,6 +31,7 @@ export default function BreedDetail() {
 
   const name = i18n.language === 'en' ? breed.nameEn : breed.nameDe;
   const short = i18n.language === 'en' ? breed.shortEn : breed.shortDe;
+  const isFav = favorites.includes(breed.id);
 
   return (
     <Screen scroll padded={false}>
@@ -36,7 +41,21 @@ export default function BreedDetail() {
 
         <View style={{ gap: spacing.sm }}>
           <Badge label={`FCI ${breed.fciGroup}`} tone="accent" />
-          <Text variant="title">{name}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+            <Text variant="title" style={{ flex: 1 }}>{name}</Text>
+            <Pressable
+              onPress={() => toggleFavorite(breed.id)}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t('breeds.favorite')}
+            >
+              <Heart
+                size={26}
+                color={isFav ? colors.accent : colors.textMuted}
+                fill={isFav ? colors.accent : 'transparent'}
+              />
+            </Pressable>
+          </View>
           <Text variant="body" tone="muted">{short}</Text>
         </View>
 
@@ -113,6 +132,23 @@ export default function BreedDetail() {
           </Card>
         </View>
 
+        {/* Welpen & Züchter */}
+        <View style={{ gap: spacing.sm }}>
+          <Text variant="heading">{t('breeds.breeders')}</Text>
+          <Card>
+            <Text variant="body" tone="muted">{t('breeds.breedersIntro')}</Text>
+            <View style={{ marginTop: spacing.sm }}>
+              <BreederLink label={t('breeds.breedersVdh')} url="https://www.vdh.de/welpen/" />
+              <BreederLink
+                label={t('breeds.breedersSearch')}
+                url={`https://www.google.com/search?q=${encodeURIComponent(`${name} Welpen Züchter`)}`}
+              />
+            </View>
+            <Text variant="caption" tone="muted" style={{ marginTop: spacing.sm }}>
+              {t('breeds.breedersNote')}
+            </Text>
+          </Card>
+        </View>
       </View>
     </Screen>
   );
@@ -180,5 +216,25 @@ function FactRow({
       <Text variant="caption" tone="muted">{label}</Text>
       <Text variant="caption" style={{ flex: 1, textAlign: 'right' }}>{value}</Text>
     </View>
+  );
+}
+
+function BreederLink({ label, url }: { label: string; url: string }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={() => Linking.openURL(url).catch(() => {})}
+      accessibilityRole="link"
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        paddingVertical: spacing.sm,
+        opacity: pressed ? 0.6 : 1,
+      })}
+    >
+      <ExternalLink size={18} color={colors.accent} />
+      <Text variant="bodyStrong" tone="accent" style={{ flex: 1 }}>{label}</Text>
+    </Pressable>
   );
 }

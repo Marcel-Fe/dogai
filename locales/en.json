@@ -16,13 +16,17 @@
   "tabs": {
     "home": "Home",
     "breeds": "Breeds",
-    "assistant": "Assistant",
+    "assistant": "Advisor",
     "scan": "Scan",
     "profile": "Profile"
   },
   "auth": {
     "welcomeTitle": "Welcome to DogAI",
     "welcomeSubtitle": "Your smart companion for a healthy dog life.",
+    "namePrompt": "Your name",
+    "namePlaceholder": "What's your name?",
+    "pickAvatar": "Pick an image",
+    "start": "Let's go",
     "login": "Sign in",
     "register": "Create account",
     "email": "Email",
@@ -69,6 +73,13 @@
     "temperament": "Temperament",
     "atAGlance": "At a glance",
     "predispositions": "Known predispositions",
+    "favorite": "Favorite",
+    "favorites": "Favorites",
+    "breeders": "Puppies & breeders",
+    "breedersIntro": "Find responsible breeders through official directories:",
+    "breedersVdh": "Search VDH breeders",
+    "breedersSearch": "Search for puppies online",
+    "breedersNote": "Check health certificates of the parent dogs and visit the breeder in person. Never buy from a car trunk.",
     "care": "Care",
     "training": "Training",
     "nutrition": "Nutrition",
@@ -150,7 +161,20 @@
     "privacy": "Privacy",
     "exportData": "Export my data",
     "deleteAccount": "Delete account",
-    "deleteAccountConfirm": "Really delete account? All data will be permanently removed."
+    "deleteAccountConfirm": "Really delete account? All data will be permanently removed.",
+    "accentColor": "Accent color",
+    "favorites": "Favorite breeds",
+    "favoritesCount": "{{count}} breeds saved",
+    "resetProfile": "Reset profile",
+    "resetConfirm": "Sure? Tap again to reset"
+  },
+  "advisor": {
+    "title": "Dog advisor",
+    "intro": "Quick, reliable answers — not a substitute for a vet.",
+    "greeting": "Hi! I help with questions about your dog. Pick a topic or type your question.",
+    "placeholder": "Ask a question …",
+    "suggestions": "Suggestions",
+    "noAnswer": "I don't have a matching answer for that. Try one of the topics above — for health concerns, please ask your vet."
   },
   "premium": {
     "title": "DogAI Premium",

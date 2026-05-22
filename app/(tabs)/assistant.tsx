@@ -1,199 +1,183 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRef, useState } from 'react';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Send, Sparkles } from 'lucide-react-native';
-import { EmptyState, Text, useToast } from '@/components/ui';
-import { ChatBubble } from '@/components/assistant/ChatBubble';
-import { VetWarning } from '@/components/common/VetWarning';
-import { DemoNotice } from '@/components/common/DemoNotice';
-import { getOrCreateSession, loadMessages } from '@/features/assistant/api';
-import { useDogs } from '@/features/dogs/api';
-import { streamChat } from '@/lib/claude';
-import { isDemoMode } from '@/lib/env';
+import { Send } from 'lucide-react-native';
+import { Screen, Text } from '@/components/ui';
+import {
+  advisorCategories,
+  advisorEntries,
+  findAnswer,
+  type AdvisorCategory,
+} from '@/data/advisor';
 import { radius, spacing, useTheme } from '@/theme';
 
-type Msg = { id: string; role: 'user' | 'assistant'; content: string };
+type Msg = { id: string; role: 'user' | 'advisor'; text: string };
 
+/** Eingebauter Hunde-Berater — kuratierte Wissensbasis, offline, ohne Konto. */
 export default function Assistant() {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
-  const toast = useToast();
-  const { data: dogs } = useDogs();
-  const listRef = useRef<FlatList<Msg>>(null);
+  const en = i18n.language === 'en';
+  const scrollRef = useRef<ScrollView>(null);
+  const counter = useRef(0);
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const [messages, setMessages] = useState<Msg[]>([
+    { id: 'greeting', role: 'advisor', text: t('advisor.greeting') },
+  ]);
   const [input, setInput] = useState('');
-  const [sending, setSending] = useState(false);
+  const [category, setCategory] = useState<AdvisorCategory>('nutrition');
 
-  const activeDog = dogs?.[0] ?? null;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const id = await getOrCreateSession(activeDog?.id ?? null);
-        if (cancelled) return;
-        setSessionId(id);
-        const history = await loadMessages(id);
-        if (!cancelled) {
-          setMessages(history.map((m) => ({ id: m.id, role: m.role, content: m.content })));
-        }
-      } catch {
-        if (!cancelled) toast.show(t('common.error'), 'error');
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // Session einmal pro Bildschirm-Lebenszyklus aufbauen.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function scrollToEnd() {
-    requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
-  }
-
-  async function send() {
-    const text = input.trim();
-    if (!text || !sessionId || sending) return;
-    if (isDemoMode) {
-      toast.show('Demo-Modus: Der KI-Chat braucht ein verbundenes Backend.', 'info');
-      return;
-    }
-
+  function ask(question: string) {
+    const text = question.trim();
+    if (!text) return;
+    const entry = findAnswer(text);
+    const answer = entry ? (en ? entry.answerEn : entry.answerDe) : t('advisor.noAnswer');
+    counter.current += 1;
+    const n = counter.current;
+    setMessages((m) => [
+      ...m,
+      { id: `u${n}`, role: 'user', text },
+      { id: `a${n}`, role: 'advisor', text: answer },
+    ]);
     setInput('');
-    setSending(true);
-
-    const userMsg: Msg = { id: `u-${Date.now()}`, role: 'user', content: text };
-    const assistantId = `a-${Date.now()}`;
-    setMessages((prev) => [...prev, userMsg, { id: assistantId, role: 'assistant', content: '' }]);
-    scrollToEnd();
-
-    try {
-      await streamChat({
-        sessionId,
-        message: text,
-        dogId: activeDog?.id ?? null,
-        locale: i18n.language,
-        onToken: (delta) => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + delta } : m)),
-          );
-          scrollToEnd();
-        },
-      });
-    } catch {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistantId && m.content === ''
-            ? { ...m, content: t('common.error') }
-            : m,
-        ),
-      );
-      toast.show(t('common.error'), 'error');
-    } finally {
-      setSending(false);
-    }
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 60);
   }
+
+  const suggestions = advisorEntries.filter((e) => e.category === category);
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/* Kopfzeile */}
-      <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.sm }}>
-        <Text variant="title">{t('assistant.title')}</Text>
-        {activeDog ? (
-          <Text variant="caption" tone="accent">
-            {t('assistant.contextFor', { name: activeDog.name })}
-          </Text>
-        ) : null}
+    <Screen padded={false}>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.md }}>
+        <Text variant="title">{t('advisor.title')}</Text>
+        <Text variant="caption" tone="muted">{t('advisor.intro')}</Text>
       </View>
 
-      <KeyboardAvoidingView
+      <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={(m) => m.id}
-          contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, flexGrow: 1 }}
-          renderItem={({ item }) => <ChatBubble role={item.role} content={item.content} />}
-          ListEmptyComponent={
-            isDemoMode ? (
-              <DemoNotice feature="Der KI-Chat" />
-            ) : (
-              <EmptyState
-                icon={<Sparkles size={40} color={colors.accent} />}
-                title={t('assistant.emptyTitle')}
-                message={t('assistant.emptyMessage')}
-              />
-            )
-          }
-          ListFooterComponent={
-            messages.length > 0 ? (
-              <View style={{ marginTop: spacing.sm }}>
-                <VetWarning />
-              </View>
-            ) : null
-          }
-        />
+        {messages.map((m) => (
+          <Bubble key={m.id} role={m.role} text={m.text} />
+        ))}
 
-        {/* Eingabe */}
-        <View
+        <Text variant="label" tone="muted" style={{ marginTop: spacing.md }}>
+          {t('advisor.suggestions').toUpperCase()}
+        </Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: spacing.sm }}
+        >
+          {advisorCategories.map((c) => {
+            const active = c.key === category;
+            return (
+              <Pressable
+                key={c.key}
+                onPress={() => setCategory(c.key)}
+                style={{
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.sm,
+                  borderRadius: radius.pill,
+                  backgroundColor: active ? colors.accent : colors.surfaceAlt,
+                }}
+              >
+                <Text variant="caption" tone={active ? 'inverse' : 'muted'}>
+                  {en ? c.en : c.de}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        <View style={{ gap: spacing.sm }}>
+          {suggestions.map((s) => (
+            <Pressable
+              key={s.id}
+              onPress={() => ask(en ? s.questionEn : s.questionDe)}
+              style={({ pressed }) => ({
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: radius.md,
+                padding: spacing.md,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Text variant="body">{en ? s.questionEn : s.questionDe}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
+
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: spacing.sm,
+          padding: spacing.md,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          backgroundColor: colors.surface,
+        }}
+      >
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          placeholder={t('advisor.placeholder')}
+          placeholderTextColor={colors.textMuted}
+          onSubmitEditing={() => ask(input)}
+          returnKeyType="send"
           style={{
-            flexDirection: 'row',
-            alignItems: 'flex-end',
-            gap: spacing.sm,
-            padding: spacing.md,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            backgroundColor: colors.surface,
+            flex: 1,
+            backgroundColor: colors.surfaceAlt,
+            borderRadius: radius.md,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.md,
+            color: colors.text,
+            fontSize: 16,
+          }}
+        />
+        <Pressable
+          onPress={() => ask(input)}
+          accessibilityRole="button"
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: radius.md,
+            backgroundColor: colors.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            placeholder={t('assistant.placeholder')}
-            placeholderTextColor={colors.textMuted}
-            multiline
-            style={{
-              flex: 1,
-              maxHeight: 120,
-              backgroundColor: colors.surfaceAlt,
-              borderRadius: radius.lg,
-              paddingHorizontal: spacing.md,
-              paddingVertical: spacing.sm,
-              color: colors.text,
-              fontSize: 16,
-            }}
-          />
-          <Pressable
-            onPress={send}
-            disabled={!input.trim() || sending}
-            accessibilityLabel={t('assistant.placeholder')}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: radius.md,
-              backgroundColor: input.trim() && !sending ? colors.accent : colors.surfaceAlt,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Send size={20} color={input.trim() && !sending ? colors.accentText : colors.textMuted} />
-          </Pressable>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          <Send size={20} color={colors.accentText} />
+        </Pressable>
+      </View>
+    </Screen>
+  );
+}
+
+function Bubble({ role, text }: { role: 'user' | 'advisor'; text: string }) {
+  const { colors } = useTheme();
+  const isUser = role === 'user';
+  return (
+    <View
+      style={{
+        alignSelf: isUser ? 'flex-end' : 'flex-start',
+        maxWidth: '88%',
+        backgroundColor: isUser ? colors.accent : colors.surface,
+        borderWidth: isUser ? 0 : 1,
+        borderColor: colors.border,
+        borderRadius: radius.lg,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+      }}
+    >
+      <Text variant="body" style={{ color: isUser ? colors.accentText : colors.text }}>
+        {text}
+      </Text>
+    </View>
   );
 }

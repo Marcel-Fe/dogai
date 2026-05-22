@@ -1,50 +1,81 @@
-import { View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { PawPrint } from 'lucide-react-native';
-import { Button, Screen, Text } from '@/components/ui';
-import { spacing, useTheme } from '@/theme';
+import { Button, Input, Screen, Text } from '@/components/ui';
+import { AVATARS, useProfile } from '@/features/profile/store';
+import { radius, spacing, useTheme } from '@/theme';
 
+/** Erstkontakt: lokales Profil anlegen (Name + Avatar) — kein Konto, kein Server. */
 export default function Welcome() {
   const router = useRouter();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const setProfile = useProfile((s) => s.setProfile);
+
+  const [name, setName] = useState('');
+  const [avatar, setAvatar] = useState<string>(AVATARS[0]);
+  const canStart = name.trim().length > 0;
+
+  function start() {
+    if (!canStart) return;
+    setProfile(name, avatar);
+    router.replace('/(tabs)');
+  }
 
   return (
-    <Screen edges={['top', 'bottom']}>
-      <View style={{ flex: 1, justifyContent: 'space-between', paddingVertical: spacing.xxl }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.lg }}>
-          <View
-            style={{
-              width: 96,
-              height: 96,
-              borderRadius: 28,
-              backgroundColor: colors.accentSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <PawPrint size={48} color={colors.accent} />
-          </View>
+    <Screen scroll edges={['top', 'bottom']}>
+      <View style={{ flex: 1, paddingVertical: spacing.xl, gap: spacing.xl }}>
+        <View style={{ alignItems: 'center', gap: spacing.sm }}>
+          <Text style={{ fontSize: 68, lineHeight: 78 }}>{avatar}</Text>
           <Text variant="display" center>{t('auth.welcomeTitle')}</Text>
           <Text variant="body" tone="muted" center style={{ maxWidth: 300 }}>
             {t('auth.welcomeSubtitle')}
           </Text>
         </View>
 
-        <View style={{ gap: spacing.md }}>
-          <Button
-            label={t('auth.register')}
-            onPress={() => router.push('/(auth)/register')}
-            fullWidth
+        <View style={{ gap: spacing.lg }}>
+          <Input
+            label={t('auth.namePrompt')}
+            placeholder={t('auth.namePlaceholder')}
+            value={name}
+            onChangeText={setName}
+            maxLength={24}
+            returnKeyType="done"
+            onSubmitEditing={start}
           />
-          <Button
-            label={t('auth.login')}
-            variant="ghost"
-            onPress={() => router.push('/(auth)/login')}
-            fullWidth
-          />
+
+          <View style={{ gap: spacing.sm }}>
+            <Text variant="label" tone="muted">{t('auth.pickAvatar').toUpperCase()}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {AVATARS.map((a) => {
+                const active = a === avatar;
+                return (
+                  <Pressable
+                    key={a}
+                    accessibilityRole="button"
+                    onPress={() => setAvatar(a)}
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: radius.md,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: active ? colors.accentSoft : colors.surface,
+                      borderWidth: 1.5,
+                      borderColor: active ? colors.accent : colors.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 28, lineHeight: 34 }}>{a}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
         </View>
+
+        <View style={{ flex: 1, minHeight: spacing.xl }} />
+        <Button label={t('auth.start')} onPress={start} disabled={!canStart} fullWidth />
       </View>
     </Screen>
   );

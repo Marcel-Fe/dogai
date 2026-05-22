@@ -1,6 +1,8 @@
 import { useColorScheme } from 'react-native';
 import { colorSchemes, type ColorScheme } from './colors';
+import { accents } from './accents';
 import { elevation, fontSize, fontWeight, layout, radius, spacing } from './tokens';
+import { useProfile } from '@/features/profile/store';
 
 export { colorSchemes, elevation, fontSize, fontWeight, layout, radius, spacing };
 export type { ColorScheme };
@@ -17,14 +19,23 @@ export type Theme = {
 };
 
 /**
- * Liefert das aktive Theme passend zum System-Farbschema.
- * Reagiert automatisch auf Wechsel Light/Dark.
+ * Liefert das aktive Theme passend zum System-Farbschema und der
+ * vom Nutzer gewählten Akzentfarbe.
  */
 export function useTheme(): Theme {
   const scheme = useColorScheme();
+  const accentName = useProfile((s) => s.accent);
   const isDark = scheme === 'dark';
+  const base = isDark ? colorSchemes.dark : colorSchemes.light;
+  const accent = accents[accentName][isDark ? 'dark' : 'light'];
+
   return {
-    colors: isDark ? colorSchemes.dark : colorSchemes.light,
+    colors: {
+      ...base,
+      accent: accent.accent,
+      accentSoft: accent.accentSoft,
+      accentText: accent.accentText,
+    },
     spacing,
     radius,
     fontSize,

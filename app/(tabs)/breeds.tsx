@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react-native';
+import { Heart, Search } from 'lucide-react-native';
 import { Card, Screen, Text } from '@/components/ui';
 import { BreedImage } from '@/components/breed/BreedImage';
+import { useProfile } from '@/features/profile/store';
 import { breedCount, breeds, fciGroups } from '@/data/breeds';
 import { formatRange } from '@/utils/format';
 import { radius, spacing, useTheme } from '@/theme';
@@ -15,17 +16,20 @@ export default function Breeds() {
   const { colors } = useTheme();
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState<number | null>(null);
+  const [favOnly, setFavOnly] = useState(false);
+  const favorites = useProfile((s) => s.favorites);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return breeds.filter((b) => {
+      if (favOnly && !favorites.includes(b.id)) return false;
       if (group !== null && b.fciGroup !== group) return false;
       if (!q) return true;
       return (
         b.nameDe.toLowerCase().includes(q) || b.nameEn.toLowerCase().includes(q)
       );
     });
-  }, [query, group]);
+  }, [query, group, favOnly, favorites]);
 
   return (
     <Screen padded={false}>
@@ -35,27 +39,50 @@ export default function Breeds() {
           {breedCount} {i18n.language === 'de' ? 'Rassen' : 'breeds'}
         </Text>
 
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.sm,
-            backgroundColor: colors.surface,
-            borderWidth: 1,
-            borderColor: colors.border,
-            borderRadius: radius.md,
-            paddingHorizontal: spacing.md,
-          }}
-        >
-          <Search size={18} color={colors.textMuted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t('breeds.searchPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            autoCorrect={false}
-            style={{ flex: 1, paddingVertical: spacing.md, color: colors.text, fontSize: 16 }}
-          />
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.sm,
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radius.md,
+              paddingHorizontal: spacing.md,
+            }}
+          >
+            <Search size={18} color={colors.textMuted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('breeds.searchPlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              autoCorrect={false}
+              style={{ flex: 1, paddingVertical: spacing.md, color: colors.text, fontSize: 16 }}
+            />
+          </View>
+          <Pressable
+            onPress={() => setFavOnly((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={t('breeds.favorites')}
+            style={{
+              width: 48,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: radius.md,
+              borderWidth: 1,
+              backgroundColor: favOnly ? colors.accent : colors.surface,
+              borderColor: favOnly ? colors.accent : colors.border,
+            }}
+          >
+            <Heart
+              size={18}
+              color={favOnly ? colors.accentText : colors.textMuted}
+              fill={favOnly ? colors.accentText : 'transparent'}
+            />
+          </Pressable>
         </View>
       </View>
 

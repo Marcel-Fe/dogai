@@ -2,13 +2,14 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
-import { House, Dog, User, type LucideIcon } from 'lucide-react-native';
+import { House, Dog, MessageCircle, User, type LucideIcon } from 'lucide-react-native';
 import { elevation, spacing, useTheme } from '@/theme';
 import { Text } from '@/components/ui';
 
 const ICONS: Record<string, LucideIcon> = {
   index: House,
   breeds: Dog,
+  assistant: MessageCircle,
   profile: User,
 };
 

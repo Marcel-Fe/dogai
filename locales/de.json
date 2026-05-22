@@ -16,13 +16,17 @@
   "tabs": {
     "home": "Start",
     "breeds": "Rassen",
-    "assistant": "Assistent",
+    "assistant": "Berater",
     "scan": "Scan",
     "profile": "Profil"
   },
   "auth": {
     "welcomeTitle": "Willkommen bei DogAI",
     "welcomeSubtitle": "Dein smarter Begleiter für ein gesundes Hundeleben.",
+    "namePrompt": "Dein Name",
+    "namePlaceholder": "Wie heißt du?",
+    "pickAvatar": "Wähle ein Bild",
+    "start": "Los geht's",
     "login": "Anmelden",
     "register": "Konto erstellen",
     "email": "E-Mail",
@@ -69,6 +73,13 @@
     "temperament": "Wesen",
     "atAGlance": "Steckbrief",
     "predispositions": "Bekannte Veranlagungen",
+    "favorite": "Favorit",
+    "favorites": "Favoriten",
+    "breeders": "Welpen & Züchter",
+    "breedersIntro": "Seriöse Züchter findest du über die offiziellen Verzeichnisse:",
+    "breedersVdh": "Züchter im VDH suchen",
+    "breedersSearch": "Welpen-Suche im Web",
+    "breedersNote": "Achte auf Gesundheitsnachweise der Elterntiere und besuche den Züchter persönlich. Kaufe niemals aus dem Kofferraum.",
     "care": "Pflege",
     "training": "Training",
     "nutrition": "Ernährung",
@@ -150,7 +161,20 @@
     "privacy": "Datenschutz",
     "exportData": "Meine Daten exportieren",
     "deleteAccount": "Konto löschen",
-    "deleteAccountConfirm": "Konto wirklich löschen? Alle Daten werden unwiderruflich entfernt."
+    "deleteAccountConfirm": "Konto wirklich löschen? Alle Daten werden unwiderruflich entfernt.",
+    "accentColor": "Akzentfarbe",
+    "favorites": "Lieblingsrassen",
+    "favoritesCount": "{{count}} Rassen gemerkt",
+    "resetProfile": "Profil zurücksetzen",
+    "resetConfirm": "Wirklich? Tippe erneut zum Zurücksetzen"
+  },
+  "advisor": {
+    "title": "Hunde-Berater",
+    "intro": "Schnelle, verlässliche Antworten — ersetzt keinen Tierarzt.",
+    "greeting": "Hallo! Ich helfe dir bei Fragen rund um deinen Hund. Wähle ein Thema oder tippe deine Frage ein.",
+    "placeholder": "Stelle eine Frage …",
+    "suggestions": "Vorschläge",
+    "noAnswer": "Dazu habe ich leider keine passende Antwort. Versuch es mit einem der Themen oben — bei gesundheitlichen Sorgen frag bitte deinen Tierarzt."
   },
   "premium": {
     "title": "DogAI Premium",
